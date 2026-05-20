@@ -7,6 +7,7 @@ export interface AuthUser {
   lastName: string;
   schoolId?: string | null;
   is2FAEnabled?: boolean;
+  isTempPass?: boolean;
   role?: string;
   permissions?: string[];
 }
@@ -96,6 +97,12 @@ export type EnableTwoFactorResponse = ApiResponse<{
   downloadContent: string;
   message: string;
 }>;
+
+export interface ChangeTempPasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+export type ChangeTempPasswordResponse = ApiResponse<{ message: string }>;
 
 export type RefreshTokenResponse = ApiResponse<AuthTokens>;
 export type LogoutResponse = ApiResponse<null>;

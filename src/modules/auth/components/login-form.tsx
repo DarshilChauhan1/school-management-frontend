@@ -13,13 +13,20 @@ import {
   useLogin,
   useResendVerification,
 } from "../api/use-auth";
+import { isLoginActive } from "../api/auth.types";
 import { loginSchema, type LoginFormValues } from "../schemas/auth.schema";
+import { ChangeTempPasswordForm } from "./change-temp-password-form";
 
 export function LoginForm() {
   const params = useSearchParams();
   const initialEmail = params.get("email") ?? "";
   const [showPassword, setShowPassword] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [tempPassChallenge, setTempPassChallenge] = useState<{
+    email: string;
+    currentPassword: string;
+    accessToken: string;
+  } | null>(null);
 
   const methods = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -43,6 +50,15 @@ export function LoginForm() {
   const onSubmit = (values: LoginFormValues) => {
     setUnverifiedEmail(null);
     login(values, {
+      onSuccess: ({ data }) => {
+        if (isLoginActive(data) && data.user.isTempPass) {
+          setTempPassChallenge({
+            email: values.email,
+            currentPassword: values.password,
+            accessToken: data.tokens.accessToken,
+          });
+        }
+      },
       onError: (error) => {
         if (isUnverifiedAccountError(error)) {
           setUnverifiedEmail(values.email);
@@ -50,6 +66,20 @@ export function LoginForm() {
       },
     });
   };
+
+  if (tempPassChallenge) {
+    return (
+      <ChangeTempPasswordForm
+        email={tempPassChallenge.email}
+        currentPassword={tempPassChallenge.currentPassword}
+        accessToken={tempPassChallenge.accessToken}
+        onChanged={() => {
+          reset({ email: tempPassChallenge.email, password: "" });
+          setTempPassChallenge(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="flex animate-in flex-col gap-7 fade-in-0 slide-in-from-bottom-3 duration-500">

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { ApiError } from "@/types/api";
 import { useAuthStore } from "../store/auth.store";
 import {
+  changeTempPassword,
   enableTwoFactor,
   fetchMe,
   loginUser,
@@ -21,6 +22,7 @@ import {
   isLoginActive,
   isMfaRequired,
   isOnboardingStage,
+  type ChangeTempPasswordRequest,
   type EnableTwoFactorRequest,
   type LoginRequest,
   type ResendVerificationRequest,
@@ -36,6 +38,7 @@ const isUnverifiedAccountError = (err: ApiError) =>
 export function useLogin() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const setToken = useAuthStore((s) => s.setToken);
   const setMfaChallenge = useAuthStore((s) => s.setMfaChallenge);
 
   return useMutation<
@@ -56,6 +59,13 @@ export function useLogin() {
         return;
       }
       if (isLoginActive(data)) {
+        // First-login: temporary password must be changed before continuing.
+        // Set only the token so the authenticated change-temp-password call
+        // works, but don't complete login / redirect yet.
+        if (data.user.isTempPass) {
+          setToken(data.tokens.accessToken);
+          return;
+        }
         setAuth(data.user, data.tokens.accessToken);
         toast.success(`Welcome back, ${data.user.firstName}!`);
         router.push(
@@ -71,6 +81,26 @@ export function useLogin() {
       if (!isUnverifiedAccountError(error)) {
         toast.error(error.message ?? "Login failed");
       }
+    },
+  });
+}
+
+export function useChangeTempPassword() {
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+
+  return useMutation<
+    Awaited<ReturnType<typeof changeTempPassword>>,
+    ApiError,
+    { body: ChangeTempPasswordRequest; accessToken: string }
+  >({
+    mutationFn: ({ body, accessToken }) => changeTempPassword(body, accessToken),
+    onSuccess: ({ data }) => {
+      // Force a fresh login with the new password.
+      clearAuth();
+      toast.success(data.message ?? "Password changed. Please sign in again.");
+    },
+    onError: (error: ApiError) => {
+      toast.error(error.message ?? "Could not change password");
     },
   });
 }

@@ -75,9 +75,14 @@ async function apiClient<TResponse>(
 
     const isUnauthorized =
       errorData?.code === "UNAUTHORIZED" || response.status === 401;
-    const isRefreshCall = endpoint.startsWith("/auth/refresh");
+    // Don't run the refresh→retry cascade for auth endpoints (refresh has no
+    // cookie yet during first-login flows, and change-temp-password carries
+    // its own token).
+    const isAuthEndpoint =
+      endpoint.startsWith("/auth/refresh") ||
+      endpoint.startsWith("/auth/change-temp-password");
 
-    if (isUnauthorized && !skipAuth && !_retry && !isRefreshCall) {
+    if (isUnauthorized && !skipAuth && !_retry && !isAuthEndpoint) {
       const newToken = await refreshAccessToken();
       if (newToken) {
         return apiClient<TResponse>(endpoint, { ...config, _retry: true });

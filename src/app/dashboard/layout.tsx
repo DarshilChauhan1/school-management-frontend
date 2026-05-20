@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   GraduationCap,
   Home,
+  KeyRound,
   Layers3,
   LogOut,
   Menu,
@@ -27,12 +28,18 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { useLogout } from "@/modules/auth/api/use-auth";
 import { useAuthStore } from "@/modules/auth/store/auth.store";
+import {
+  AbilityProvider,
+  useAppAbility,
+} from "@/modules/permission/ability/ability-context";
 
 interface NavItem {
   href: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
   badge?: string;
+  /** CASL subject gating visibility. Omit for always-visible items. */
+  subject?: string;
 }
 
 interface NavGroup {
@@ -44,35 +51,36 @@ const navGroups: NavGroup[] = [
   {
     items: [
       { href: "/dashboard", label: "Dashboard", icon: Home },
-      { href: "/dashboard/students", label: "Students", icon: GraduationCap, badge: "1.2k" },
-      { href: "/dashboard/staff", label: "Staff", icon: Users },
-      { href: "/dashboard/departments", label: "Departments", icon: Building2 },
-      { href: "/dashboard/subjects", label: "Subjects", icon: BookOpen },
-      { href: "/dashboard/classes", label: "Classes", icon: Layers3 },
-      { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarDays },
-      { href: "/dashboard/roles", label: "Roles", icon: Shield },
+      { href: "/dashboard/students", label: "Students", icon: GraduationCap, badge: "1.2k", subject: "students" },
+      { href: "/dashboard/staff", label: "Staff", icon: Users, subject: "teachers" },
+      { href: "/dashboard/departments", label: "Departments", icon: Building2, subject: "departments" },
+      { href: "/dashboard/subjects", label: "Subjects", icon: BookOpen, subject: "subjects" },
+      { href: "/dashboard/classes", label: "Classes", icon: Layers3, subject: "classes" },
+      { href: "/dashboard/academic-years", label: "Academic years", icon: CalendarDays, subject: "schools" },
+      { href: "/dashboard/roles", label: "Roles", icon: Shield, subject: "roles" },
+      { href: "/dashboard/permissions", label: "Permissions", icon: KeyRound, subject: "permissions" },
     ],
   },
   {
     section: "Academics",
     items: [
-      { href: "/dashboard/attendance", label: "Attendance", icon: ClipboardCheck },
-      { href: "/dashboard/timetable", label: "Timetable", icon: CalendarDays },
-      { href: "/dashboard/calendar", label: "School calendar", icon: CalendarDays },
+      { href: "/dashboard/attendance", label: "Attendance", icon: ClipboardCheck, subject: "attendance" },
+      { href: "/dashboard/timetable", label: "Timetable", icon: CalendarDays, subject: "timetable" },
+      { href: "/dashboard/calendar", label: "School calendar", icon: CalendarDays, subject: "schools" },
     ],
   },
   {
     section: "Operations",
     items: [
-      { href: "/dashboard/fees", label: "Fees & finance", icon: Wallet },
-      { href: "/dashboard/communication", label: "Communication", icon: MessageSquare },
+      { href: "/dashboard/fees", label: "Fees & finance", icon: Wallet, subject: "fees" },
+      { href: "/dashboard/communication", label: "Communication", icon: MessageSquare, subject: "communication" },
     ],
   },
   {
     section: "System",
     items: [
-      { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
-      { href: "/dashboard/settings", label: "Settings", icon: Settings },
+      { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, subject: "analytics" },
+      { href: "/dashboard/settings", label: "Settings", icon: Settings, subject: "schools" },
     ],
   },
 ];
@@ -105,6 +113,10 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/roles": {
     title: "Roles",
     subtitle: "Define school-scoped roles and the permissions they unlock for staff",
+  },
+  "/dashboard/permissions": {
+    title: "Permissions",
+    subtitle: "Assign module-level create, read, update, and delete access per role",
   },
 };
 
@@ -153,12 +165,48 @@ export default function DashboardLayout({
 
   if (!isAuthenticated || !schoolId) return null;
 
+  return (
+    <AbilityProvider>
+      <DashboardShell
+        pathname={pathname}
+        heading={heading}
+        user={user}
+        isPending={isPending}
+        onLogout={() => logout()}
+        mobileNavOpen={mobileNavOpen}
+        setMobileNavOpen={setMobileNavOpen}
+      >
+        {children}
+      </DashboardShell>
+    </AbilityProvider>
+  );
+}
+
+function DashboardShell({
+  children,
+  pathname,
+  heading,
+  user,
+  isPending,
+  onLogout,
+  mobileNavOpen,
+  setMobileNavOpen,
+}: {
+  children: React.ReactNode;
+  pathname: string;
+  heading: { title: string; subtitle: string };
+  user: { firstName?: string; lastName?: string; email?: string } | null;
+  isPending: boolean;
+  onLogout: () => void;
+  mobileNavOpen: boolean;
+  setMobileNavOpen: (open: boolean) => void;
+}) {
   const renderNav = (onNavigate?: () => void) => (
     <SidebarContent
       pathname={pathname}
       user={user}
       isPending={isPending}
-      onLogout={() => logout()}
+      onLogout={onLogout}
       onNavigate={onNavigate}
     />
   );
@@ -222,7 +270,7 @@ export default function DashboardLayout({
               variant="outline"
               className="hidden sm:inline-flex lg:hidden"
               disabled={isPending}
-              onClick={() => logout()}
+              onClick={onLogout}
             >
               <LogOut className="size-4" />
               <span className="hidden md:inline">Sign out</span>
@@ -248,6 +296,17 @@ function SidebarContent({
   onLogout: () => void;
   onNavigate?: () => void;
 }) {
+  const ability = useAppAbility();
+
+  const visibleGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => !item.subject || ability.can("read", item.subject),
+      ),
+    }))
+    .filter((group) => group.items.length > 0);
+
   return (
     <>
       <div className="border-b px-5 py-4">
@@ -266,7 +325,7 @@ function SidebarContent({
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <div className="space-y-5">
-          {navGroups.map((group, groupIndex) => (
+          {visibleGroups.map((group, groupIndex) => (
             <div key={group.section ?? groupIndex}>
               {group.section ? (
                 <div className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">

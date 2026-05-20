@@ -1,5 +1,7 @@
 import { http } from "@/lib/api-client";
 import type {
+  ChangeTempPasswordRequest,
+  ChangeTempPasswordResponse,
   EnableTwoFactorRequest,
   EnableTwoFactorResponse,
   LoginRequest,
@@ -50,6 +52,18 @@ export const enableTwoFactor = (body: EnableTwoFactorRequest) =>
   http.post<EnableTwoFactorRequest, EnableTwoFactorResponse>(
     "/auth/2fa/enable",
     body,
+  );
+
+export const changeTempPassword = (
+  body: ChangeTempPasswordRequest,
+  accessToken?: string,
+) =>
+  http.post<ChangeTempPasswordRequest, ChangeTempPasswordResponse>(
+    "/auth/change-temp-password",
+    body,
+    accessToken
+      ? { headers: { Authorization: `Bearer ${accessToken}` } }
+      : undefined,
   );
 
 export const refreshToken = () =>
