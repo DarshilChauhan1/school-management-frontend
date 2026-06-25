@@ -25,7 +25,7 @@ import {
   useSetCurrentAcademicYear,
 } from "../api/use-academic-years";
 import type { AcademicYearItem } from "../api/academic-year.types";
-import { useAcademicYearStore } from "../store/academic-year.store";
+import { useAcademicYearStore } from "@/stores/dialog-store";
 import { AcademicYearFormDialog } from "./academic-year-form-dialog";
 import { AcademicYearViewDialog } from "./academic-year-view-dialog";
 
@@ -212,7 +212,7 @@ export function AcademicYearsDashboard() {
               className="pl-8"
             />
           </div>
-          <Button onClick={openCreate}>
+          <Button onClick={() => openCreate()}>
             <Plus className="size-4" />
             New academic year
           </Button>

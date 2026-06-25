@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { useDepartmentStore } from "../store/department.store";
+import { useDepartmentStore } from "@/stores/dialog-store";
 
 const formatDate = (value: string) => {
   if (!value) return "—";
@@ -22,7 +22,7 @@ const formatDate = (value: string) => {
 };
 
 export function DepartmentViewDialog() {
-  const viewingDepartment = useDepartmentStore((s) => s.viewingDepartment);
+  const viewingDepartment = useDepartmentStore((s) => s.viewing);
   const closeView = useDepartmentStore((s) => s.closeView);
 
   const isOpen = Boolean(viewingDepartment);

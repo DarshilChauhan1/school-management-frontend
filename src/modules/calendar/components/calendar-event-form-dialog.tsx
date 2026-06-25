@@ -35,7 +35,7 @@ import {
   calendarEventSchema,
   type CalendarEventFormSchema,
 } from "../schemas/calendar.schema";
-import { useCalendarStore } from "../store/calendar.store";
+import { useCalendarStore } from "@/stores/dialog-store";
 
 const NO_ACADEMIC_YEAR = "__none__";
 
@@ -65,7 +65,7 @@ const toPayload = (
 export function CalendarEventFormDialog() {
   const isFormOpen = useCalendarStore((s) => s.isFormOpen);
   const editing = useCalendarStore((s) => s.editing);
-  const prefillDate = useCalendarStore((s) => s.prefillDate);
+  const prefillDate = useCalendarStore((s) => s.prefill);
   const closeForm = useCalendarStore((s) => s.closeForm);
 
   const isEditing = Boolean(editing);

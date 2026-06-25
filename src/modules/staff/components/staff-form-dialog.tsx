@@ -33,7 +33,7 @@ import {
   staffSchema,
   type StaffFormSchema,
 } from "../schemas/staff.schema";
-import { useStaffStore } from "../store/staff.store";
+import { useStaffStore } from "@/stores/dialog-store";
 
 const NO_DEPARTMENT = "__none__";
 

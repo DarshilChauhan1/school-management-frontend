@@ -25,7 +25,7 @@ import {
   useDepartments,
 } from "../api/use-departments";
 import type { DepartmentSummary } from "../api/department.types";
-import { useDepartmentStore } from "../store/department.store";
+import { useDepartmentStore } from "@/stores/dialog-store";
 import { DepartmentFormDialog } from "./department-form-dialog";
 import { DepartmentViewDialog } from "./department-view-dialog";
 
@@ -208,7 +208,7 @@ export function DepartmentsDashboard() {
               />
             </div>
           </div>
-          <Button onClick={openCreate}>
+          <Button onClick={() => openCreate()}>
             <Plus className="size-4" />
             New department
           </Button>

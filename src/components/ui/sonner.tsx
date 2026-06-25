@@ -17,21 +17,24 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
-      richColors
-      closeButton
       position="top-right"
+      gap={8}
       icons={{
-        success: <CircleCheckIcon className="size-4" />,
-        info: <InfoIcon className="size-4" />,
-        warning: <TriangleAlertIcon className="size-4" />,
-        error: <OctagonXIcon className="size-4" />,
-        loading: <Loader2Icon className="size-4 animate-spin" />,
+        success: <CircleCheckIcon className="size-4 text-emerald-500" />,
+        info: <InfoIcon className="size-4 text-sky-500" />,
+        warning: <TriangleAlertIcon className="size-4 text-amber-500" />,
+        error: <OctagonXIcon className="size-4 text-rose-500" />,
+        loading: <Loader2Icon className="size-4 animate-spin text-muted-foreground" />,
       }}
-      style={
-        {
-          "--border-radius": "var(--radius)",
-        } as React.CSSProperties
-      }
+      toastOptions={{
+        classNames: {
+          toast:
+            "group !w-full !rounded-lg !border !border-border !bg-popover !text-popover-foreground !shadow-md !px-4 !py-3 !gap-3 !items-center",
+          title: "!text-[13.5px] !font-medium !text-foreground",
+          description: "!text-[12.5px] !text-muted-foreground",
+          icon: "!m-0 !self-center",
+        },
+      }}
       {...props}
     />
   )

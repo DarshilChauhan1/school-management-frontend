@@ -24,7 +24,7 @@ import {
   CALENDAR_EVENT_TYPES,
   EVENT_TYPE_META,
 } from "../constants/event-type";
-import { useCalendarStore } from "../store/calendar.store";
+import { useCalendarStore } from "@/stores/dialog-store";
 import { CalendarEventFormDialog } from "./calendar-event-form-dialog";
 import { CalendarEventViewDialog } from "./calendar-event-view-dialog";
 

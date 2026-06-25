@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/modules/auth/store/auth.store";
+import { useAuthStore } from "@/stores/auth-store";
 import type { ApiError, ApiResponse } from "@/types/api";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;

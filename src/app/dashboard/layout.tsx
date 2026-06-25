@@ -6,13 +6,17 @@ import {
   Building2,
   CalendarDays,
   ClipboardCheck,
+  Clock,
+  Clock4,
   GraduationCap,
+  CircleUser,
   Home,
   KeyRound,
   Layers3,
   LogOut,
   Menu,
   MessageSquare,
+  MoreVertical,
   Settings,
   Shield,
   Users,
@@ -24,10 +28,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ComponentType } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { useLogout } from "@/modules/auth/api/use-auth";
-import { useAuthStore } from "@/modules/auth/store/auth.store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   AbilityProvider,
   useAppAbility,
@@ -51,7 +62,7 @@ const navGroups: NavGroup[] = [
   {
     items: [
       { href: "/dashboard", label: "Dashboard", icon: Home },
-      { href: "/dashboard/students", label: "Students", icon: GraduationCap, badge: "1.2k", subject: "students" },
+      { href: "/dashboard/students", label: "Students", icon: GraduationCap, subject: "students" },
       { href: "/dashboard/staff", label: "Staff", icon: Users, subject: "teachers" },
       { href: "/dashboard/departments", label: "Departments", icon: Building2, subject: "departments" },
       { href: "/dashboard/subjects", label: "Subjects", icon: BookOpen, subject: "subjects" },
@@ -66,6 +77,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/dashboard/attendance", label: "Attendance", icon: ClipboardCheck, subject: "attendance" },
       { href: "/dashboard/timetable", label: "Timetable", icon: CalendarDays, subject: "timetable" },
+      { href: "/dashboard/school-time", label: "School timings", icon: Clock },
       { href: "/dashboard/calendar", label: "School calendar", icon: CalendarDays, subject: "schools" },
     ],
   },
@@ -79,6 +91,7 @@ const navGroups: NavGroup[] = [
   {
     section: "System",
     items: [
+      { href: "/dashboard/profile", label: "My profile", icon: CircleUser },
       { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, subject: "analytics" },
       { href: "/dashboard/settings", label: "Settings", icon: Settings, subject: "schools" },
     ],
@@ -89,6 +102,10 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard": {
     title: "Dashboard",
     subtitle: "Whole-school snapshot and daily operating signals",
+  },
+  "/dashboard/students": {
+    title: "Students",
+    subtitle: "Admit students, manage profiles, enrollment, and guardian contacts",
   },
   "/dashboard/departments": {
     title: "Departments",
@@ -110,6 +127,11 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
     title: "School calendar",
     subtitle: "Plan holidays, exams, PTMs, and events across the academic year",
   },
+  "/dashboard/school-time": {
+    title: "School timings",
+    subtitle:
+      "Set daily school hours, assembly, and recess windows per academic year",
+  },
   "/dashboard/roles": {
     title: "Roles",
     subtitle: "Define school-scoped roles and the permissions they unlock for staff",
@@ -117,6 +139,10 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/permissions": {
     title: "Permissions",
     subtitle: "Assign module-level create, read, update, and delete access per role",
+  },
+  "/dashboard/profile": {
+    title: "My profile",
+    subtitle: "Manage your photo, name, and contact details",
   },
 };
 
@@ -364,21 +390,51 @@ function SidebarContent({
       </nav>
 
       <div className="border-t p-3">
-        <div className="mb-3 rounded-lg bg-muted/60 p-3">
-          <p className="truncate text-sm font-medium">
-            {user?.firstName ? `${user.firstName} ${user.lastName ?? ""}` : "Admin"}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
+        <div className="flex items-center gap-2.5 rounded-lg bg-muted/60 p-2.5">
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-teal-600 text-xs font-semibold text-white">
+            {`${user?.firstName?.[0] ?? ""}${user?.lastName?.[0] ?? ""}`.toUpperCase() ||
+              "A"}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">
+              {user?.firstName
+                ? `${user.firstName} ${user.lastName ?? ""}`
+                : "Admin"}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {user?.email}
+            </p>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label="Account menu"
+                  disabled={isPending}
+                >
+                  <MoreVertical className="size-4" />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                render={
+                  <Link href="/dashboard/profile" onClick={onNavigate} />
+                }
+              >
+                <CircleUser className="size-4" />
+                <span>My profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={onLogout}>
+                <LogOut className="size-4" />
+                <span>{isPending ? "Signing out…" : "Sign out"}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <Button
-          variant="outline"
-          className="w-full justify-start"
-          disabled={isPending}
-          onClick={onLogout}
-        >
-          <LogOut className="size-4" />
-          {isPending ? "Signing out" : "Sign out"}
-        </Button>
       </div>
     </>
   );

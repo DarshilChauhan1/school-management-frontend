@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import type { AuthUser } from "../api/auth.types";
+import type { AuthUser } from "@/modules/auth/api/auth.types";
 
 interface MfaChallenge {
   ticket: string;

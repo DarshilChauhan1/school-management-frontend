@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Spinner } from "@/components/ui/spinner";
-import { useAuthStore } from "@/modules/auth/store/auth.store";
+import { useAuthStore } from "@/stores/auth-store";
 import { OnboardingJourney } from "@/modules/onboarding/components/onboarding-journey";
 
 export default function OnboardingPage() {

@@ -7,6 +7,7 @@ import {
   Plus,
   Search,
   Trash2,
+  UserCog,
   Users,
   XCircle,
 } from "lucide-react";
@@ -18,9 +19,11 @@ import { Input } from "@/components/ui/input";
 import { RowActionsMenu, type RowAction } from "@/components/ui/row-actions-menu";
 import { cn } from "@/lib/utils";
 
+import { AssignStaffDialog } from "@/modules/staff-assignment/components/assign-staff-dialog";
+
 import { useDeleteStaff, useStaff } from "../api/use-staff";
 import { EMPLOYMENT_TYPE_LABELS, type StaffItem } from "../api/staff.types";
-import { useStaffStore } from "../store/staff.store";
+import { useStaffStore } from "@/stores/dialog-store";
 import { StaffFormDialog } from "./staff-form-dialog";
 import { StaffViewDialog } from "./staff-view-dialog";
 
@@ -34,6 +37,7 @@ export function StaffDashboard() {
   const openCreate = useStaffStore((s) => s.openCreate);
   const openEdit = useStaffStore((s) => s.openEdit);
   const openView = useStaffStore((s) => s.openView);
+  const openAssign = useStaffStore((s) => s.openSecondary);
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -140,6 +144,12 @@ export function StaffDashboard() {
             onSelect: () => openView(row),
           },
           {
+            key: "assign",
+            label: "Assign class & subject",
+            icon: <UserCog className="size-4" />,
+            onSelect: () => openAssign(row),
+          },
+          {
             key: "edit",
             label: "Edit",
             icon: <Edit3 className="size-4" />,
@@ -200,7 +210,7 @@ export function StaffDashboard() {
               className="pl-8"
             />
           </div>
-          <Button onClick={openCreate}>
+          <Button onClick={() => openCreate()}>
             <Plus className="size-4" />
             New staff
           </Button>
@@ -237,6 +247,7 @@ export function StaffDashboard() {
 
       <StaffFormDialog />
       <StaffViewDialog />
+      <AssignStaffDialog />
     </div>
   );
 }

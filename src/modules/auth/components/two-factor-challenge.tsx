@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import { useVerifyMfaLogin } from "../api/use-auth";
-import { useAuthStore } from "../store/auth.store";
+import { useAuthStore } from "@/stores/auth-store";
 
 const OTP_LENGTH = 6;
 

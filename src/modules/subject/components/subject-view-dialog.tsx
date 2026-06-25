@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { useSubjectStore } from "../store/subject.store";
+import { useSubjectStore } from "@/stores/dialog-store";
 
 export function SubjectViewDialog() {
   const viewing = useSubjectStore((s) => s.viewing);

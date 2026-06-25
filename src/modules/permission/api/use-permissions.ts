@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { ApiError } from "@/types/api";
-import { useAuthStore } from "@/modules/auth/store/auth.store";
+import { useAuthStore } from "@/stores/auth-store";
 
 import {
   assignRolePermissions,

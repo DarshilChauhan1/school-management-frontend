@@ -14,10 +14,10 @@ import { useDepartments } from "@/modules/department/api/use-departments";
 import { useAcademicYears } from "@/modules/academic-year/api/use-academic-years";
 
 import { mediumLabel } from "../constants/medium";
-import { useClassStore } from "../store/class.store";
+import { useClassStore } from "@/stores/dialog-store";
 
 export function ClassViewDialog() {
-  const viewingClass = useClassStore((s) => s.viewingClass);
+  const viewingClass = useClassStore((s) => s.viewing);
   const closeView = useClassStore((s) => s.closeView);
 
   const departmentsQuery = useDepartments({ limit: 100, isActive: true });

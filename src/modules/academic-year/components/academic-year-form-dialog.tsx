@@ -30,7 +30,7 @@ import {
   academicYearSchema,
   type AcademicYearFormSchema,
 } from "../schemas/academic-year.schema";
-import { useAcademicYearStore } from "../store/academic-year.store";
+import { useAcademicYearStore } from "@/stores/dialog-store";
 
 const toDateInputValue = (value: string): string => {
   if (!value) return "";

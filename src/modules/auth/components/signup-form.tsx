@@ -73,7 +73,10 @@ export function SignupForm() {
       </div>
 
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="stagger-children flex flex-col gap-4"
+        >
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="firstName" className="text-[12.5px] font-semibold text-foreground/85">

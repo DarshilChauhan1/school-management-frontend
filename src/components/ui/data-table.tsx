@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { Spinner } from "./spinner";
+import { TableHeaderSkeleton } from "@/components/skeletons/table-header-skeleton";
 
 export interface DataTableColumn<T> {
   key: string;
@@ -20,6 +20,7 @@ interface DataTableProps<T> {
   rows: T[];
   rowKey: (row: T) => string;
   isLoading?: boolean;
+  isHeaderLoading?: boolean;
   emptyState?: React.ReactNode;
   maxBodyHeight?: number | string;
   pagination?: DataTablePaginationProps;
@@ -38,6 +39,7 @@ export function DataTable<T>({
   rows,
   rowKey,
   isLoading,
+  isHeaderLoading,
   emptyState,
   maxBodyHeight = 480,
   pagination,
@@ -58,18 +60,27 @@ export function DataTable<T>({
         className,
       )}
     >
-      <div
-        className="grid border-b bg-muted/60 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-        style={{ gridTemplateColumns: gridTemplate, gap: "0.75rem" }}
-      >
-        {columns.map((col) => (
-          <div
-            key={col.key}
-            className={cn(alignClass(col.align), col.headerClassName)}
-          >
-            {col.header}
-          </div>
-        ))}
+      <div className="relative border-b bg-muted/60">
+        <div
+          className={cn(
+            "grid px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-opacity",
+            isHeaderLoading && "opacity-0",
+          )}
+          style={{ gridTemplateColumns: gridTemplate, gap: "0.75rem" }}
+          aria-hidden={isHeaderLoading ? true : undefined}
+        >
+          {columns.map((col) => (
+            <div
+              key={col.key}
+              className={cn(alignClass(col.align), col.headerClassName)}
+            >
+              {col.header}
+            </div>
+          ))}
+        </div>
+        {isHeaderLoading ? (
+          <TableHeaderSkeleton columns={columns.length} className="absolute inset-0" />
+        ) : null}
       </div>
 
       <div
@@ -81,16 +92,12 @@ export function DataTable<T>({
               : maxBodyHeight,
         }}
       >
-        {isLoading ? (
-          <div className="grid min-h-44 place-items-center">
-            <Spinner className="size-6" />
-          </div>
-        ) : rows.length ? (
-          <div className="divide-y">
+        {rows.length ? (
+          <div className={cn("divide-y", isLoading && "opacity-70")}>
             {rows.map((row, idx) => (
               <div
                 key={rowKey(row)}
-                className="grid items-center px-4 py-3 text-sm"
+                className="grid animate-table-row items-center px-4 py-3 text-sm transition-all hover:bg-muted/40 hover:shadow-[inset_3px_0_0_var(--primary)]"
                 style={{ gridTemplateColumns: gridTemplate, gap: "0.75rem" }}
               >
                 {columns.map((col) => (
@@ -107,6 +114,10 @@ export function DataTable<T>({
                 ))}
               </div>
             ))}
+          </div>
+        ) : isLoading ? (
+          <div className="grid min-h-44 place-items-center px-6 text-center text-sm text-muted-foreground">
+            Loading records…
           </div>
         ) : (
           <div className="grid min-h-44 place-items-center px-6 text-center text-sm text-muted-foreground">

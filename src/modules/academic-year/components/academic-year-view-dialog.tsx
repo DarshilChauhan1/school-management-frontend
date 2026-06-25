@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { useAcademicYearStore } from "../store/academic-year.store";
+import { useAcademicYearStore } from "@/stores/dialog-store";
 
 const formatDate = (value: string) => {
   if (!value) return "—";

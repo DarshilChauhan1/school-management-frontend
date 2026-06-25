@@ -34,14 +34,14 @@ import {
   useCreateClassSubject,
   useDeleteClassSubject,
 } from "../api/use-class-subjects";
-import { useClassSubjectStore } from "../store/class-subject.store";
+import { useClassSubjectStore } from "@/stores/dialog-store";
 
 type Step = "subject" | "classes";
 
 export function LinkSubjectClassesDialog() {
-  const isOpen = useClassSubjectStore((s) => s.isLinkOpen);
-  const prefillSubject = useClassSubjectStore((s) => s.prefillSubject);
-  const closeLink = useClassSubjectStore((s) => s.closeLink);
+  const isOpen = useClassSubjectStore((s) => s.isFormOpen);
+  const prefillSubject = useClassSubjectStore((s) => s.prefill);
+  const closeLink = useClassSubjectStore((s) => s.closeForm);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeLink()}>

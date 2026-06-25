@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 
 import { useDeleteRole, useRoles } from "../api/use-roles";
 import type { RoleItem } from "../api/role.types";
-import { useRoleStore } from "../store/role.store";
+import { useRoleStore } from "@/stores/dialog-store";
 import { RoleFormDialog } from "./role-form-dialog";
 import { RoleViewDialog } from "./role-view-dialog";
 
@@ -205,7 +205,7 @@ export function RolesDashboard() {
               />
             </div>
           </div>
-          <Button onClick={openCreate}>
+          <Button onClick={() => openCreate()}>
             <Plus className="size-4" />
             New role
           </Button>

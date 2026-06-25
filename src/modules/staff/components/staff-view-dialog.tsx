@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { EMPLOYMENT_TYPE_LABELS } from "../api/staff.types";
-import { useStaffStore } from "../store/staff.store";
+import { useStaffStore } from "@/stores/dialog-store";
 
 const formatDate = (value: string | null) => {
   if (!value) return "—";

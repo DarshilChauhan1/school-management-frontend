@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { EVENT_TYPE_META } from "../constants/event-type";
-import { useCalendarStore } from "../store/calendar.store";
+import { useCalendarStore } from "@/stores/dialog-store";
 
 const formatDate = (value: string) => {
   if (!value) return "—";

@@ -43,7 +43,7 @@ import {
   parseOptionalInt,
   type ClassFormSchema,
 } from "../schemas/class.schema";
-import { useClassStore } from "../store/class.store";
+import { useClassStore } from "@/stores/dialog-store";
 
 const NO_DEPARTMENT_VALUE = "__none__";
 
@@ -91,7 +91,7 @@ const toUpdatePayload = (values: ClassFormSchema): UpdateClassPayload => ({
 
 export function ClassFormDialog() {
   const isFormOpen = useClassStore((s) => s.isFormOpen);
-  const editingClass = useClassStore((s) => s.editingClass);
+  const editingClass = useClassStore((s) => s.editing);
   const closeForm = useClassStore((s) => s.closeForm);
 
   const isEditing = Boolean(editingClass);

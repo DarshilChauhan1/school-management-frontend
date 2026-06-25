@@ -34,7 +34,7 @@ import {
   subjectSchema,
   type SubjectFormSchema,
 } from "../schemas/subject.schema";
-import { useSubjectStore } from "../store/subject.store";
+import { useSubjectStore } from "@/stores/dialog-store";
 
 const NO_VALUE = "__none__";
 

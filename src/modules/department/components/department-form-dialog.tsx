@@ -30,7 +30,7 @@ import {
   departmentSchema,
   type DepartmentFormSchema,
 } from "../schemas/department.schema";
-import { useDepartmentStore } from "../store/department.store";
+import { useDepartmentStore } from "@/stores/dialog-store";
 
 const NO_PARENT_VALUE = "__none__";
 
@@ -48,7 +48,7 @@ const toApiPayload = (values: DepartmentFormSchema): DepartmentFormValues => ({
 export function DepartmentFormDialog() {
   const isFormOpen = useDepartmentStore((state) => state.isFormOpen);
   const editingDepartment = useDepartmentStore(
-    (state) => state.editingDepartment,
+    (state) => state.editing,
   );
   const closeForm = useDepartmentStore((state) => state.closeForm);
 

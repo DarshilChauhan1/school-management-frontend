@@ -1,9 +1,12 @@
 "use client";
 
 import {
+  BookOpen,
+  CalendarDays,
   CheckCircle2,
   Edit3,
   Eye,
+  GraduationCap,
   Layers3,
   Plus,
   Search,
@@ -19,23 +22,39 @@ import { RowActionsMenu, type RowAction } from "@/components/ui/row-actions-menu
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+import { useAcademicYears } from "@/modules/academic-year/api/use-academic-years";
 import { useDepartments } from "@/modules/department/api/use-departments";
 
 import { useClasses, useDeleteClass } from "../api/use-classes";
 import type { ClassItem } from "../api/class.types";
 import { mediumLabel } from "../constants/medium";
-import { useClassStore } from "../store/class.store";
+import { useClassStore } from "@/stores/dialog-store";
 import { ClassFormDialog } from "./class-form-dialog";
 import { ClassViewDialog } from "./class-view-dialog";
 
 const ALL_DEPARTMENTS = "all";
 const DEFAULT_LIMIT = 10;
 
+type ViewMode = "cards" | "table";
+type StatusFilter = "active" | "inactive" | "all";
+
+const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Archived" },
+  { value: "all", label: "All" },
+];
+
+type DepartmentLite = { id: string; name: string; code?: string | null };
+
+const sectionStudents = () => 0; // enrollment counts are not exposed on the class list yet
+
 export function ClassesDashboard() {
   const openCreate = useClassStore((s) => s.openCreate);
   const openEdit = useClassStore((s) => s.openEdit);
   const openView = useClassStore((s) => s.openView);
 
+  const [view, setView] = useState<ViewMode>("cards");
+  const [status, setStatus] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
   const [departmentId, setDepartmentId] = useState(ALL_DEPARTMENTS);
   const [page, setPage] = useState(1);
@@ -46,6 +65,12 @@ export function ClassesDashboard() {
     sortBy: "name",
     sortOrder: "asc",
     isActive: true,
+  });
+
+  const academicYearsQuery = useAcademicYears({
+    limit: 50,
+    sortBy: "startDate",
+    sortOrder: "desc",
   });
 
   const classesQuery = useClasses({
@@ -67,24 +92,43 @@ export function ClassesDashboard() {
     setDepartmentId(value);
     setPage(1);
   };
+  const handleStatusChange = (value: StatusFilter) => {
+    setStatus(value);
+    setPage(1);
+  };
   const handleLimitChange = (value: number) => {
     setLimit(value);
     setPage(1);
   };
 
-  const classes = classesQuery.data?.data.data ?? [];
+  const allClasses = classesQuery.data?.data.data ?? [];
   const pagination = classesQuery.data?.data.pagination;
-  const total = pagination?.total ?? classes.length;
+  const total = pagination?.total ?? allClasses.length;
   const totalPages = pagination?.totalPages ?? 1;
+
+  const classes = useMemo(
+    () =>
+      allClasses.filter((c) => {
+        if (status === "active") return c.isActive;
+        if (status === "inactive") return !c.isActive;
+        return true;
+      }),
+    [allClasses, status],
+  );
 
   const departments = useMemo(
     () => departmentsQuery.data?.data.data ?? [],
     [departmentsQuery.data],
   );
   const departmentMap = useMemo(
-    () => new Map(departments.map((d) => [d.id, d])),
+    () => new Map<string, DepartmentLite>(departments.map((d) => [d.id, d])),
     [departments],
   );
+
+  const academicYear = useMemo(() => {
+    const years = academicYearsQuery.data?.data.data ?? [];
+    return years.find((y) => y.isCurrent) ?? years[0];
+  }, [academicYearsQuery.data]);
 
   const departmentOptions = useMemo(
     () => [
@@ -96,6 +140,12 @@ export function ClassesDashboard() {
     ],
     [departments],
   );
+
+  const totalSections = allClasses.reduce(
+    (sum, c) => sum + c.sections.length,
+    0,
+  );
+  const activeCount = allClasses.filter((c) => c.isActive).length;
 
   const handleDelete = (cls: ClassItem) => {
     const confirmed = window.confirm(
@@ -218,33 +268,70 @@ export function ClassesDashboard() {
 
   return (
     <div className="space-y-5">
-      <section className="grid gap-3 md:grid-cols-3">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricTile
           label="Total classes"
           value={total}
-          hint="Across all departments"
+          hint={`${activeCount} active · ${total - activeCount} archived`}
           icon={<Layers3 className="size-4" />}
-        />
-        <MetricTile
-          label="Active"
-          value={classes.filter((c) => c.isActive).length}
-          hint="Visible on this page"
-          icon={<CheckCircle2 className="size-4" />}
-          tone="success"
         />
         <MetricTile
           label="Sections"
-          value={classes.reduce((sum, c) => sum + c.sections.length, 0)}
-          hint="Visible on this page"
-          icon={<Layers3 className="size-4" />}
+          value={totalSections}
+          hint="Across loaded classes"
+          icon={<BookOpen className="size-4" />}
           tone="info"
+        />
+        <MetricTile
+          label="Active"
+          value={activeCount}
+          hint="Currently running"
+          icon={<GraduationCap className="size-4" />}
+          tone="success"
+        />
+        <MetricTile
+          label="Academic year"
+          value={academicYear?.name ?? "—"}
+          hint={academicYear?.isCurrent ? "Current" : "Most recent"}
+          icon={<CalendarDays className="size-4" />}
+          tone="amber"
         />
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center">
-            <div className="relative min-w-0 flex-1">
+        <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 lg:flex-row lg:flex-wrap lg:items-center">
+          <h2 className="text-sm font-semibold">All classes</h2>
+
+          <Segmented
+            value={view}
+            onChange={(v) => setView(v as ViewMode)}
+            options={[
+              { value: "cards", label: "Cards" },
+              { value: "table", label: "Table" },
+            ]}
+          />
+
+          <Segmented
+            value={status}
+            onChange={(v) => handleStatusChange(v as StatusFilter)}
+            options={STATUS_FILTERS}
+          />
+
+          <div className="lg:w-56">
+            <Select
+              value={departmentId}
+              onValueChange={handleDepartmentChange}
+              options={departmentOptions}
+              placeholder={
+                departmentsQuery.isLoading
+                  ? "Loading departments…"
+                  : "Filter by department"
+              }
+            />
+          </div>
+
+          <div className="flex min-w-0 flex-1 items-center gap-2 lg:justify-end">
+            <div className="relative min-w-0 flex-1 lg:max-w-56">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
@@ -253,56 +340,229 @@ export function ClassesDashboard() {
                 className="pl-8"
               />
             </div>
-            <div className="md:w-64">
-              <Select
-                value={departmentId}
-                onValueChange={handleDepartmentChange}
-                options={departmentOptions}
-                placeholder={
-                  departmentsQuery.isLoading
-                    ? "Loading departments…"
-                    : "Filter by department"
-                }
-              />
-            </div>
+            <Button onClick={() => openCreate()}>
+              <Plus className="size-4" />
+              New class
+            </Button>
           </div>
-          <Button onClick={openCreate}>
-            <Plus className="size-4" />
-            New class
-          </Button>
         </div>
 
-        <DataTable
-          columns={columns}
-          rows={classes}
-          rowKey={(row) => row.id}
-          isLoading={classesQuery.isLoading}
-          maxBodyHeight={520}
-          emptyState={
-            <div>
+        {view === "cards" ? (
+          classesQuery.isLoading ? (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-56 animate-pulse rounded-xl border bg-muted/40"
+                />
+              ))}
+            </div>
+          ) : classes.length === 0 ? (
+            <div className="rounded-lg border bg-card p-10 text-center">
               <Layers3 className="mx-auto mb-3 size-8 text-muted-foreground" />
               <p className="font-medium text-foreground">No classes found</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Adjust filters or create a class to get started.
               </p>
             </div>
-          }
-          pagination={{
-            page,
-            pageSize: limit,
-            total,
-            totalPages,
-            onPageChange: setPage,
-            onPageSizeChange: handleLimitChange,
-            pageSizeOptions: [5, 10, 25, 50],
-            label: "classes",
-            disabled: classesQuery.isFetching,
-          }}
-        />
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {classes.map((cls) => (
+                <ClassCard
+                  key={cls.id}
+                  cls={cls}
+                  department={
+                    cls.departmentId
+                      ? departmentMap.get(cls.departmentId)
+                      : undefined
+                  }
+                  onEdit={() => openEdit(cls)}
+                  onView={() => openView(cls)}
+                />
+              ))}
+            </div>
+          )
+        ) : (
+          <DataTable
+            columns={columns}
+            rows={classes}
+            rowKey={(row) => row.id}
+            isLoading={classesQuery.isLoading}
+            maxBodyHeight={520}
+            emptyState={
+              <div>
+                <Layers3 className="mx-auto mb-3 size-8 text-muted-foreground" />
+                <p className="font-medium text-foreground">No classes found</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Adjust filters or create a class to get started.
+                </p>
+              </div>
+            }
+            pagination={{
+              page,
+              pageSize: limit,
+              total,
+              totalPages,
+              onPageChange: setPage,
+              onPageSizeChange: handleLimitChange,
+              pageSizeOptions: [5, 10, 25, 50],
+              label: "classes",
+              disabled: classesQuery.isFetching,
+            }}
+          />
+        )}
       </section>
 
       <ClassFormDialog />
       <ClassViewDialog />
+    </div>
+  );
+}
+
+function Segmented({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="inline-flex gap-1 rounded-lg bg-muted p-0.5">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={cn(
+            "rounded-md px-3 py-1 text-xs font-medium transition-colors",
+            value === opt.value
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ClassCard({
+  cls,
+  department,
+  onEdit,
+  onView,
+}: {
+  cls: ClassItem;
+  department?: DepartmentLite;
+  onEdit: () => void;
+  onView: () => void;
+}) {
+  const capacity = cls.sections.reduce((sum, s) => sum + (s.capacity ?? 0), 0);
+  const students = cls.sections.reduce((sum) => sum + sectionStudents(), 0);
+  const pct = capacity ? Math.min(100, (students / capacity) * 100) : 0;
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col overflow-hidden rounded-xl border bg-card",
+        !cls.isActive && "opacity-70",
+      )}
+    >
+      <div className="border-b p-4 pb-3">
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] font-semibold uppercase text-muted-foreground">
+                Lvl {cls.level ?? "—"}
+              </span>
+              <StatusBadge isActive={cls.isActive} compact />
+            </div>
+            <button
+              type="button"
+              onClick={onView}
+              className="mt-1 block truncate text-left text-base font-bold tracking-tight hover:underline"
+            >
+              {cls.name}
+            </button>
+            {cls.description ? (
+              <p className="mt-1 truncate text-xs text-muted-foreground">
+                {cls.description}
+              </p>
+            ) : null}
+          </div>
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="ghost"
+            aria-label="Edit class"
+            onClick={onEdit}
+          >
+            <Edit3 className="size-3.5" />
+          </Button>
+        </div>
+
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {department ? (
+            <span className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">
+              {department.name}
+            </span>
+          ) : null}
+          <span className="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
+            {cls.mediumOfInstruction
+              ? mediumLabel(cls.mediumOfInstruction)
+              : "—"}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex-1 p-4 pt-3">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+          Sections · {cls.sections.length}
+        </p>
+        {cls.sections.length === 0 ? (
+          <div className="rounded-md border border-dashed px-3 py-3 text-center text-xs text-muted-foreground">
+            No sections yet
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            {cls.sections.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center gap-2 rounded-md bg-muted/60 px-2 py-1.5"
+              >
+                <span className="grid size-6 place-items-center rounded bg-brand-100 text-[11px] font-bold text-brand-700">
+                  {s.name}
+                </span>
+                <span className="flex-1 truncate text-xs text-muted-foreground">
+                  {s.roomNumber ? `Room ${s.roomNumber}` : "Unassigned room"}
+                </span>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {s.capacity ?? "—"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="border-t bg-muted/40 p-4 py-3">
+        <div className="mb-1.5 flex items-baseline justify-between">
+          <span className="text-xs text-muted-foreground">Total capacity</span>
+          <span className="font-mono text-xs font-bold">{capacity || "—"}</span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+          <div
+            className={cn(
+              "h-full rounded-full",
+              pct >= 95 ? "bg-rose-500" : "bg-brand-500",
+            )}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -315,10 +575,10 @@ function MetricTile({
   tone = "default",
 }: {
   label: string;
-  value: number;
+  value: number | string;
   hint: string;
   icon: React.ReactNode;
-  tone?: "default" | "success" | "info";
+  tone?: "default" | "success" | "info" | "amber";
 }) {
   return (
     <div className="rounded-lg border bg-card p-4">
@@ -331,32 +591,43 @@ function MetricTile({
               ? "bg-emerald-100 text-emerald-700"
               : tone === "info"
                 ? "bg-sky-100 text-sky-700"
-                : "bg-brand-100 text-brand-700",
+                : tone === "amber"
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-brand-100 text-brand-700",
           )}
         >
           {icon}
         </span>
       </div>
-      <div className="mt-3 text-3xl font-semibold leading-none">{value}</div>
+      <div className="mt-3 truncate text-3xl font-semibold leading-none">
+        {value}
+      </div>
       <div className="mt-2 text-xs text-muted-foreground">{hint}</div>
     </div>
   );
 }
 
-function StatusBadge({ isActive }: { isActive: boolean }) {
+function StatusBadge({
+  isActive,
+  compact = false,
+}: {
+  isActive: boolean;
+  compact?: boolean;
+}) {
   return (
     <span
       className={cn(
-        "inline-flex w-fit items-center gap-1 rounded-full px-2 py-1 text-xs font-medium",
+        "inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+        compact && "px-1.5 py-0.5 text-[10px]",
         isActive
           ? "bg-emerald-100 text-emerald-700"
           : "bg-rose-100 text-rose-700",
       )}
     >
       {isActive ? (
-        <CheckCircle2 className="size-3" />
+        <CheckCircle2 className={compact ? "size-2.5" : "size-3"} />
       ) : (
-        <XCircle className="size-3" />
+        <XCircle className={compact ? "size-2.5" : "size-3"} />
       )}
       {isActive ? "Active" : "Archived"}
     </span>

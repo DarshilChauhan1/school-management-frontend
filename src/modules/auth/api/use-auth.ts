@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { ApiError } from "@/types/api";
-import { useAuthStore } from "../store/auth.store";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   changeTempPassword,
   enableTwoFactor,

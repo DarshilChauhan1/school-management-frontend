@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuthStore } from "@/modules/auth/store/auth.store";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user);

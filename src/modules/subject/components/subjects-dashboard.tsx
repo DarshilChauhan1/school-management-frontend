@@ -23,11 +23,10 @@ import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useDepartments } from "@/modules/department/api/use-departments";
 import { LinkSubjectClassesDialog } from "@/modules/class-subject/components/link-subject-classes-dialog";
-import { useClassSubjectStore } from "@/modules/class-subject/store/class-subject.store";
+import { useClassSubjectStore, useSubjectStore } from "@/stores/dialog-store";
 
 import { useDeleteSubject, useSubjects } from "../api/use-subjects";
 import type { SubjectItem } from "../api/subject.types";
-import { useSubjectStore } from "../store/subject.store";
 import { SubjectFormDialog } from "./subject-form-dialog";
 import { SubjectViewDialog } from "./subject-view-dialog";
 
@@ -45,7 +44,7 @@ export function SubjectsDashboard() {
   const openCreate = useSubjectStore((s) => s.openCreate);
   const openEdit = useSubjectStore((s) => s.openEdit);
   const openView = useSubjectStore((s) => s.openView);
-  const openLink = useClassSubjectStore((s) => s.openLink);
+  const openLink = useClassSubjectStore((s) => s.openCreate);
 
   const [search, setSearch] = useState("");
   const [departmentId, setDepartmentId] = useState(ALL_VALUE);
@@ -296,7 +295,7 @@ export function SubjectsDashboard() {
               <Link2 className="size-4" />
               Link subjects &amp; classes
             </Button>
-            <Button onClick={openCreate}>
+            <Button onClick={() => openCreate()}>
               <Plus className="size-4" />
               New subject
             </Button>

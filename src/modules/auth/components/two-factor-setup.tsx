@@ -19,7 +19,7 @@ import {
   useState,
 } from "react";
 import { useEnableTwoFactor, useTwoFactorSetup } from "../api/use-auth";
-import { useAuthStore } from "../store/auth.store";
+import { useAuthStore } from "@/stores/auth-store";
 
 type Step = "offer" | "qr" | "codes";
 const OTP_LENGTH = 6;

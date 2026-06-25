@@ -66,7 +66,10 @@ export function ChangeTempPasswordForm({
       </div>
 
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="stagger-children flex flex-col gap-4"
+        >
           <div className="flex flex-col gap-1.5">
             <Label
               htmlFor="newPassword"
