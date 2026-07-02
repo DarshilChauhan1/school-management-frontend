@@ -10,6 +10,7 @@ import {
 
 import { Label } from "./label";
 import { Select, type SelectOption } from "./select";
+import { cn } from "@/lib/utils";
 
 interface SelectFieldProps<T extends FieldValues> {
   name: FieldPath<T>;
@@ -36,7 +37,7 @@ export function SelectField<T extends FieldValues>({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <Label htmlFor={name} className="text-sm font-medium">
+        <Label htmlFor={name} className="text-xs font-medium text-muted-foreground">
           {label}
         </Label>
       )}
@@ -52,7 +53,10 @@ export function SelectField<T extends FieldValues>({
             options={options}
             placeholder={placeholder}
             disabled={disabled}
-            className={errorMessage ? "border-destructive ring-3 ring-destructive/20" : undefined}
+            className={cn(
+              "h-11 rounded-xl border-transparent bg-paper-2/60 px-3.5 text-sm focus-visible:border-primary focus-visible:bg-card focus-visible:ring-4 focus-visible:ring-primary/10",
+              errorMessage && "border-destructive ring-3 ring-destructive/20",
+            )}
             aria-invalid={Boolean(errorMessage)}
           />
         )}

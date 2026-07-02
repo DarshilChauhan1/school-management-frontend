@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ShieldCheck } from "lucide-react";
+import { ArrowRight, ChevronLeft, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -12,6 +12,8 @@ import {
 } from "react";
 import { useVerifyMfaLogin } from "../api/use-auth";
 import { useAuthStore } from "@/stores/auth-store";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const OTP_LENGTH = 6;
 
@@ -83,26 +85,31 @@ export function TwoFactorChallenge() {
 
   return (
     <div className="flex animate-in flex-col gap-6 fade-in-0 slide-in-from-bottom-3 duration-500">
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
         onClick={() => {
           setMfaChallenge(null);
           router.push("/auth/login");
         }}
-        className="inline-flex w-fit items-center gap-1 rounded-md px-1.5 py-1 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        className="h-8 w-fit rounded-md px-1.5 text-[12.5px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
       >
         <ChevronLeft className="size-3.5" /> Back
-      </button>
+      </Button>
 
-      <div className="grid size-14 place-items-center rounded-md bg-[var(--color-brand-50)] text-[var(--color-brand-700)]">
+      <div className="grid size-14 place-items-center rounded-md bg-primary/10 text-primary">
         <ShieldCheck className="size-6" />
       </div>
 
       <div>
-        <h2 className="m-0 text-[22px] font-bold tracking-[-0.01em]">
+        <div className="mb-3 text-[11px] uppercase text-muted-foreground">
+          Security check
+        </div>
+        <h2 className="text-display m-0 text-3xl font-semibold">
           Two-factor verification
         </h2>
-        <p className="mt-1.5 text-[13.5px] leading-[1.5] text-muted-foreground">
+        <p className="mt-2 text-sm leading-[1.6] text-muted-foreground">
           {useRecovery
             ? "Enter one of the recovery codes you saved when you enabled 2FA."
             : `Enter the 6-digit code from your authenticator app for ${mfa.email}.`}
@@ -111,7 +118,7 @@ export function TwoFactorChallenge() {
 
       {!useRecovery ? (
         <>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-6 gap-2">
             {digits.map((d, i) => (
               <input
                 key={i}
@@ -127,7 +134,7 @@ export function TwoFactorChallenge() {
                 maxLength={1}
                 disabled={isPending}
                 autoFocus={i === 0}
-                className="h-14 w-12 rounded-md border border-input bg-card text-center font-mono text-[22px] font-bold text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
+                className="h-14 min-w-0 rounded-md border border-border bg-card text-center font-mono text-[22px] font-bold text-foreground shadow-sm outline-none transition-colors focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60"
               />
             ))}
           </div>
@@ -143,7 +150,7 @@ export function TwoFactorChallenge() {
             <button
               type="button"
               onClick={() => setUseRecovery(true)}
-              className="font-semibold text-[var(--color-brand-600)] hover:underline"
+              className="font-medium text-primary hover:underline"
             >
               Use a recovery code
             </button>
@@ -151,33 +158,35 @@ export function TwoFactorChallenge() {
         </>
       ) : (
         <form onSubmit={handleRecoverySubmit} className="flex flex-col gap-3">
-          <input
+          <Input
             value={recoveryCode}
             onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
             placeholder="XXXXX-XXXXX"
             autoFocus
             disabled={isPending}
-            className="h-12 rounded-md border border-input bg-card px-3 font-mono text-[15px] tracking-[0.08em] outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
+            className="h-12 rounded-md border-border bg-card px-3 font-mono text-[15px] focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/30"
           />
           {error && (
             <p className="text-[12.5px] text-destructive">
               {error.message ?? "Invalid code, try again"}
             </p>
           )}
-          <button
+          <Button
             type="submit"
             disabled={isPending || !recoveryCode.trim()}
-            className="mt-1 inline-flex h-12 items-center justify-center gap-1.5 rounded-md bg-[var(--color-brand-600)] px-4 text-[14.5px] font-semibold text-white shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition-all hover:bg-[var(--color-brand-700)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-1 h-12 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-emerald hover:bg-primary/90"
           >
             {isPending ? "Verifying…" : "Verify recovery code"}
-          </button>
-          <button
+            <ArrowRight className="size-4" />
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setUseRecovery(false)}
-            className="text-[12.5px] font-semibold text-muted-foreground hover:text-foreground"
+            className="h-9 rounded-md text-[12.5px] font-medium text-muted-foreground hover:text-foreground"
           >
             Use authenticator code instead
-          </button>
+          </Button>
         </form>
       )}
 
@@ -185,7 +194,7 @@ export function TwoFactorChallenge() {
         Need help?{" "}
         <Link
           href="/auth/login"
-          className="font-semibold text-[var(--color-brand-600)] hover:underline"
+          className="font-medium text-primary hover:underline"
         >
           Back to sign in
         </Link>

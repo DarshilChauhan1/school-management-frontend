@@ -1,74 +1,65 @@
-import { ShieldCheck } from "lucide-react";
-
-const STATS = [
-  { value: "1,284", label: "Students enrolled" },
-  { value: "96.4%", label: "Avg. attendance" },
-  { value: "87", label: "Teachers & staff" },
-  { value: "12", label: "Departments" },
-];
-
-const BRAND_BG = `
-  radial-gradient(circle at 20% 20%, rgba(16,185,129,0.22), transparent 55%),
-  radial-gradient(circle at 80% 80%, rgba(20,184,166,0.22), transparent 55%),
-  linear-gradient(135deg, #064e3b, #0d9488)
-`;
+import { Layers, ShieldCheck } from "lucide-react";
 
 export function BrandPanel() {
   return (
-    <div
-      className="relative hidden flex-1 flex-col justify-between overflow-hidden p-12 text-white xl:p-16 lg:flex"
-      style={{ background: BRAND_BG }}
-    >
-      <div className="flex items-center gap-3">
-        <div
-          className="grid size-11 place-items-center rounded-md text-[17px] font-extrabold text-white shadow-[0_4px_10px_rgba(16,185,129,0.25)]"
-          style={{ background: "linear-gradient(135deg, #10b981, #14b8a6)" }}
-        >
-          NA
+    <aside className="relative hidden flex-col justify-between overflow-hidden bg-ink p-12 text-paper xl:p-16 lg:flex">
+      <div aria-hidden className="auth-panel-sheen" />
+      <div aria-hidden className="auth-cover-grid opacity-70" />
+
+      <div className="relative flex items-center gap-3 animate-rise-in">
+        <div className="relative grid size-11 place-items-center rounded-md bg-primary text-primary-foreground shadow-emerald">
+          <Layers className="size-5" />
+          <span className="absolute -right-1 -top-1 size-2.5 rounded-full bg-gold" />
         </div>
         <div>
-          <div className="text-[17px] font-bold">Northfield Academy</div>
-          <div className="text-xs opacity-70">Bengaluru · Est. 1998</div>
+          <div className="font-display text-lg font-semibold">Campus OS</div>
+          <div className="text-xs text-paper/55">
+            The operating system for schools
+          </div>
         </div>
       </div>
 
-      <div className="max-w-[480px]">
-        <div className="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] opacity-75">
+      <div className="relative max-w-xl space-y-9">
+        <div
+          className="inline-flex items-center gap-2 text-[11px] uppercase text-paper/55"
+          style={{ animation: "rise-in 0.8s ease-out both", animationDelay: "0.05s" }}
+        >
+          <span className="h-px w-8 bg-gold/70" />
           One platform for the whole school
         </div>
-        <h1 className="m-0 text-[42px] font-bold leading-[1.08] tracking-[-0.02em]">
+
+        <h1
+          className="text-display m-0 text-5xl font-semibold leading-[1.02] xl:text-6xl"
+          style={{ animation: "rise-in 0.9s ease-out both", animationDelay: "0.12s" }}
+        >
           Less paperwork.
           <br />
-          More{" "}
-          <span
-            className="bg-clip-text text-transparent"
-            style={{ backgroundImage: "linear-gradient(90deg, #6ee7b7, #99f6e4)" }}
-          >
-            teaching.
-          </span>
+          <span className="text-primary">More teaching.</span>
         </h1>
-        <p className="mt-5 max-w-[420px] text-[15px] leading-[1.6] opacity-80">
-          Attendance, timetables, quizzes, fees, and parent communication — all in
-          one calm, friendly place.
+
+        <p
+          className="max-w-md text-lg leading-relaxed text-paper/70"
+          style={{ animation: "rise-in 1s ease-out both", animationDelay: "0.2s" }}
+        >
+          Attendance, timetables, quizzes, fees, and parent communication in one
+          calm, friendly place.
         </p>
+      </div>
 
-        <div className="mt-9 grid grid-cols-2 gap-3">
-          {STATS.map((s) => (
-            <div
-              key={s.label}
-              className="rounded-md border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-xl"
-            >
-              <div className="text-[24px] font-bold tracking-[-0.01em]">{s.value}</div>
-              <div className="mt-0.5 text-[12.5px] opacity-75">{s.label}</div>
-            </div>
-          ))}
+      <div className="relative">
+        <div
+          className="inline-flex items-center gap-2 overflow-hidden text-xs text-paper/55"
+          style={{ animation: "rise-in 1.1s ease-out both", animationDelay: "0.4s" }}
+        >
+          <ShieldCheck className="size-4 text-primary" />
+          <span>Secured with 2FA · ISO 27001 compliant · Data hosted in India</span>
         </div>
+        <div
+          aria-hidden
+          className="absolute -bottom-2 left-0 h-px w-40 bg-gradient-to-r from-transparent via-primary to-transparent"
+          style={{ animation: "shimmer-line 4.5s ease-in-out infinite" }}
+        />
       </div>
-
-      <div className="flex items-center gap-2.5 text-xs opacity-75">
-        <ShieldCheck className="size-3.5" />
-        <span>Secured with 2FA · ISO 27001 compliant · Data hosted in India</span>
-      </div>
-    </div>
+    </aside>
   );
 }

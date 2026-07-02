@@ -1,11 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronRight, Eye, EyeOff, Lock, Mail, MailCheck } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Lock, Mail, MailCheck } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -84,10 +86,13 @@ export function LoginForm() {
   return (
     <div className="flex animate-in flex-col gap-7 fade-in-0 slide-in-from-bottom-3 duration-500">
       <div>
-        <h2 className="m-0 text-[24px] font-bold tracking-[-0.01em]">
+        <div className="mb-3 text-[11px] uppercase text-muted-foreground">
+          Sign in
+        </div>
+        <h2 className="text-display m-0 text-4xl font-semibold">
           Welcome back
         </h2>
-        <p className="mt-1.5 text-[14px] text-muted-foreground">
+        <p className="mt-2 text-sm text-muted-foreground">
           Sign in to continue to your portal.
         </p>
       </div>
@@ -105,15 +110,16 @@ export function LoginForm() {
               </div>
             </div>
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
             disabled={isResending}
             onClick={() => resend({ email: unverifiedEmail })}
-            className="inline-flex h-9 items-center justify-center gap-1.5 self-start rounded-md border border-amber-300 bg-white px-3 text-[12.5px] font-semibold text-amber-900 transition-colors hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-800 dark:bg-transparent dark:text-amber-100 dark:hover:bg-amber-950/50"
+            className="h-9 self-start rounded-md border-amber-300 bg-white px-3 text-[12.5px] font-semibold text-amber-900 hover:bg-amber-50 dark:border-amber-800 dark:bg-transparent dark:text-amber-100 dark:hover:bg-amber-950/50"
           >
             <Mail className="size-3.5" />
             {isResending ? "Sending…" : "Resend verification email"}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -125,12 +131,12 @@ export function LoginForm() {
           <div className="flex flex-col gap-1.5">
             <Label
               htmlFor="email"
-              className="text-[12.5px] font-semibold text-foreground/85"
+              className="text-xs font-medium uppercase text-muted-foreground"
             >
               Email
             </Label>
             <div className="relative">
-              <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Controller
                 control={control}
                 name="email"
@@ -141,7 +147,7 @@ export function LoginForm() {
                     type="email"
                     placeholder="you@northfield.edu"
                     autoComplete="email"
-                    className="h-11 pl-10 text-[14px]"
+                    className="h-12 border-border bg-card pl-10 text-sm focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/30"
                     aria-invalid={Boolean(errors.email)}
                     onChange={(e) => {
                       field.onChange(e);
@@ -159,12 +165,12 @@ export function LoginForm() {
           <div className="flex flex-col gap-1.5">
             <Label
               htmlFor="password"
-              className="text-[12.5px] font-semibold text-foreground/85"
+              className="text-xs font-medium uppercase text-muted-foreground"
             >
               Password
             </Label>
             <div className="relative">
-              <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Controller
                 control={control}
                 name="password"
@@ -175,7 +181,7 @@ export function LoginForm() {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     autoComplete="current-password"
-                    className="h-11 pl-10 pr-10 text-[14px]"
+                    className="h-12 border-border bg-card pl-10 pr-10 text-sm focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/30"
                     aria-invalid={Boolean(errors.password)}
                   />
                 )}
@@ -200,26 +206,26 @@ export function LoginForm() {
 
           <div className="flex items-center justify-between pt-1 text-[13px]">
             <label className="flex cursor-pointer items-center gap-2 text-foreground/80">
-              <input
-                type="checkbox"
+              <Checkbox
+                id="keep"
                 defaultChecked
-                className="size-3.5 accent-[var(--color-brand-600)]"
+                className="border-primary shadow-sm data-[checked]:border-primary data-[checked]:bg-primary"
               />
-              Keep me signed in
+              <span>Keep me signed in</span>
             </label>
-            <a className="cursor-pointer font-semibold text-[var(--color-brand-600)] hover:underline">
+            <a className="cursor-pointer font-medium text-primary hover:underline">
               Forgot password?
             </a>
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={isPending}
-            className="mt-2 inline-flex h-12 items-center justify-center gap-1.5 rounded-md bg-[var(--color-brand-600)] px-4 text-[14.5px] font-semibold text-white shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition-all hover:bg-[var(--color-brand-700)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 h-12 w-full rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-emerald hover:bg-primary/90"
           >
             {isPending ? "Signing in…" : "Sign in"}
-            <ChevronRight className="size-4" />
-          </button>
+            <ArrowRight className="size-4 transition-transform group-hover/button:translate-x-0.5" />
+          </Button>
         </form>
       </FormProvider>
 
@@ -227,7 +233,7 @@ export function LoginForm() {
         Don&apos;t have an account?{" "}
         <Link
           href="/auth/signup"
-          className="font-semibold text-[var(--color-brand-600)] hover:underline"
+          className="font-medium text-primary hover:underline"
         >
           Create one
         </Link>

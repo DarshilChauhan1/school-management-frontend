@@ -56,11 +56,11 @@ export function DataTable<T>({
   return (
     <div
       className={cn(
-        "flex flex-col overflow-hidden rounded-lg border bg-card",
+        "paper-card flex flex-col overflow-hidden p-0",
         className,
       )}
     >
-      <div className="relative border-b bg-muted/60">
+      <div className="relative border-b border-border bg-paper-2/40">
         <div
           className={cn(
             "grid px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground transition-opacity",
@@ -116,8 +116,25 @@ export function DataTable<T>({
             ))}
           </div>
         ) : isLoading ? (
-          <div className="grid min-h-44 place-items-center px-6 text-center text-sm text-muted-foreground">
-            Loading records…
+          <div className="divide-y divide-border">
+            {Array.from({ length: 5 }).map((_, rowIndex) => (
+              <div
+                key={rowIndex}
+                className="grid items-center px-4 py-3"
+                style={{ gridTemplateColumns: gridTemplate, gap: "0.75rem" }}
+              >
+                {columns.map((column, columnIndex) => (
+                  <span
+                    key={column.key}
+                    className={cn(
+                      "h-4 rounded-full bg-muted-foreground/15 skeleton-shimmer",
+                      columnIndex === 0 ? "w-28" : "w-20",
+                      columnIndex === columns.length - 1 && "ml-auto w-8",
+                    )}
+                  />
+                ))}
+              </div>
+            ))}
           </div>
         ) : (
           <div className="grid min-h-44 place-items-center px-6 text-center text-sm text-muted-foreground">
@@ -175,14 +192,14 @@ export function DataTablePagination({
   }, [page, safePages]);
 
   return (
-    <div className="flex flex-wrap items-center gap-3 border-t bg-card px-4 py-2.5 text-xs text-muted-foreground">
+    <div className="flex flex-wrap items-center gap-3 border-t border-border bg-card px-4 py-3 text-xs text-muted-foreground">
       <label className="flex items-center gap-2">
         <span>Rows per page</span>
         <select
           value={pageSize}
           disabled={disabled}
           onChange={(event) => onPageSizeChange(Number(event.target.value))}
-          className="h-7 rounded-md border border-input bg-background px-2 text-xs font-medium text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-8 rounded-xl border border-transparent bg-paper-2/60 px-2.5 text-xs font-medium text-foreground outline-none focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pageSizeOptions.map((size) => (
             <option key={size} value={size}>
@@ -258,8 +275,8 @@ function PageButton({
       type="button"
       {...props}
       className={cn(
-        "inline-flex h-7 min-w-7 items-center justify-center rounded-md border px-2 text-xs font-semibold tabular-nums transition-colors",
-        "border-input bg-background text-muted-foreground hover:bg-muted hover:text-foreground",
+        "inline-flex h-8 min-w-8 items-center justify-center rounded-xl border px-2 text-xs font-semibold tabular-nums transition-colors",
+        "border-transparent bg-paper-2/60 text-muted-foreground hover:bg-primary-soft hover:text-primary",
         active &&
           "border-primary bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
         "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-background disabled:hover:text-muted-foreground",

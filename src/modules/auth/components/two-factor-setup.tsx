@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertTriangle,
   Check,
   CheckCircle2,
   ChevronLeft,
@@ -20,6 +21,9 @@ import {
 } from "react";
 import { useEnableTwoFactor, useTwoFactorSetup } from "../api/use-auth";
 import { useAuthStore } from "@/stores/auth-store";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 type Step = "offer" | "qr" | "codes";
 const OTP_LENGTH = 6;
@@ -38,7 +42,7 @@ function Stepper({ active }: { active: 1 | 2 | 3 }) {
               <span
                 className={`grid size-[18px] place-items-center rounded-full text-[10px] font-bold ${
                   done || on
-                    ? "bg-[var(--color-brand-500)] text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-secondary text-muted-foreground"
                 }`}
               >
@@ -175,14 +179,17 @@ export function TwoFactorSetup() {
       {step === "offer" && (
         <>
           <Stepper active={1} />
-          <div className="grid size-14 place-items-center rounded-md bg-[var(--color-brand-50)] text-[var(--color-brand-700)]">
+          <div className="grid size-14 place-items-center rounded-md bg-primary/10 text-primary">
             <ShieldCheck className="size-6" />
           </div>
           <div>
-            <h2 className="m-0 text-[22px] font-bold tracking-[-0.01em]">
+            <div className="mb-3 text-[11px] uppercase text-muted-foreground">
+              Two-factor authentication
+            </div>
+            <h2 className="text-display m-0 text-3xl font-semibold">
               Add an extra layer of security
             </h2>
-            <p className="mt-1.5 text-[13.5px] leading-[1.5] text-muted-foreground">
+            <p className="mt-2 text-sm leading-[1.6] text-muted-foreground">
               {user?.firstName ? `Hi ${user.firstName}, ` : ""}protect your account
               with two-factor authentication. Even if someone learns your password,
               they won&apos;t get in without your phone.
@@ -199,7 +206,7 @@ export function TwoFactorSetup() {
                 key={t}
                 className="flex items-center gap-2.5 text-[13px] text-foreground/85"
               >
-                <span className="grid size-[22px] place-items-center rounded-full bg-[var(--color-brand-100)] text-[var(--color-brand-700)]">
+                <span className="grid size-[22px] place-items-center rounded-full bg-primary/10 text-primary">
                   <Check className="size-3" />
                 </span>
                 {t}
@@ -208,22 +215,23 @@ export function TwoFactorSetup() {
           </ul>
 
           <div className="mt-1 flex flex-col gap-2">
-            <button
+            <Button
               type="button"
               onClick={startSetup}
               disabled={setup.isPending}
-              className="inline-flex h-12 items-center justify-center gap-1.5 rounded-md bg-[var(--color-brand-600)] px-4 text-[14.5px] font-semibold text-white shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition-all hover:bg-[var(--color-brand-700)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-12 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-emerald hover:bg-primary/90"
             >
               <ShieldCheck className="size-4" />
               {setup.isPending ? "Preparing…" : "Enable 2FA — recommended"}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={skip}
-              className="inline-flex h-11 items-center justify-center rounded-md text-[13.5px] font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="h-11 rounded-md text-[13.5px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
               Skip for now
-            </button>
+            </Button>
           </div>
 
           <p className="text-center text-[11.5px] text-muted-foreground">
@@ -236,18 +244,20 @@ export function TwoFactorSetup() {
         <>
           <Stepper active={2} />
           <div className="flex items-center gap-2.5">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={() => setStep("offer")}
-              className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
               <ChevronLeft className="size-3.5" />
-            </button>
-            <h2 className="m-0 text-[20px] font-bold tracking-[-0.01em]">
+            </Button>
+            <h2 className="text-display m-0 text-2xl font-semibold">
               Scan with your authenticator
             </h2>
           </div>
-          <p className="-mt-3 pl-9 text-[13px] text-muted-foreground">
+          <p className="-mt-3 pl-9 text-sm text-muted-foreground">
             Open Google Authenticator, Authy, or 1Password and scan this QR.
           </p>
 
@@ -262,16 +272,17 @@ export function TwoFactorSetup() {
               />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+              <div className="text-[11px] font-bold uppercase text-muted-foreground">
                 Can&apos;t scan? Enter manually
               </div>
               <div className="mt-1.5 break-all font-mono text-[12.5px] font-semibold leading-[1.4] text-foreground">
                 {setup.data.data.secret.match(/.{1,4}/g)?.join(" ")}
               </div>
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={copySecret}
-                className="mt-2.5 inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-[12px] font-semibold text-foreground transition-colors hover:bg-secondary"
+                className="mt-2.5 h-8 rounded-md border-border bg-card px-2.5 text-[12px] font-semibold text-foreground hover:bg-secondary"
               >
                 {copied ? (
                   <>
@@ -282,15 +293,15 @@ export function TwoFactorSetup() {
                     <Copy className="size-3" /> Copy secret
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12.5px] font-semibold text-foreground/85">
+            <Label className="text-xs font-medium uppercase text-muted-foreground">
               Enter the 6-digit code from your app
-            </label>
-            <div className="flex gap-2">
+            </Label>
+            <div className="grid grid-cols-6 gap-2">
               {digits.map((d, i) => (
                 <input
                   key={i}
@@ -306,7 +317,7 @@ export function TwoFactorSetup() {
                   maxLength={1}
                   disabled={enable.isPending}
                   autoFocus={i === 0}
-                  className="h-13 w-11 rounded-md border border-input bg-card text-center font-mono text-[20px] font-bold outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
+                  className="h-14 min-w-0 rounded-md border border-border bg-card text-center font-mono text-[20px] font-bold shadow-sm outline-none transition-colors focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               ))}
             </div>
@@ -326,24 +337,24 @@ export function TwoFactorSetup() {
         <>
           <Stepper active={3} />
           <div className="flex items-start gap-2.5">
-            <div className="grid size-9 place-items-center rounded-md bg-[var(--color-brand-50)] text-[var(--color-brand-700)]">
+            <div className="grid size-9 place-items-center rounded-md bg-primary/10 text-primary">
               <CheckCircle2 className="size-5" />
             </div>
             <div>
-              <h2 className="m-0 text-[20px] font-bold tracking-[-0.01em]">
-                2FA enabled — save your backup codes
+              <h2 className="text-display m-0 text-2xl font-semibold">
+                2FA enabled: save your backup codes
               </h2>
-              <p className="mt-1 text-[12.5px] text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Each code works once if you lose your authenticator.
               </p>
             </div>
           </div>
 
-          <div className="flex items-start gap-2 rounded-md bg-amber-100 p-3 text-[12px] text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-            <span className="leading-none">⚠</span>
+          <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-[12px] text-amber-900 dark:border-amber-900/30 dark:bg-amber-950/40 dark:text-amber-200">
+            <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
             <span>
               <b>This is the only time you&apos;ll see these codes.</b> Download or
-              copy them now — we cannot show them again.
+              copy them now; we cannot show them again.
             </span>
           </div>
 
@@ -362,41 +373,42 @@ export function TwoFactorSetup() {
           </div>
 
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={downloadCodes}
-              className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-card text-[12px] font-semibold transition-colors hover:bg-secondary"
+              className="h-9 flex-1 rounded-md border-border bg-card text-[12px] font-semibold hover:bg-secondary"
             >
               <Download className="size-3.5" /> Download .txt
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
               onClick={copyAllCodes}
-              className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-card text-[12px] font-semibold transition-colors hover:bg-secondary"
+              className="h-9 flex-1 rounded-md border-border bg-card text-[12px] font-semibold hover:bg-secondary"
             >
               <Copy className="size-3.5" /> Copy all
-            </button>
+            </Button>
           </div>
 
           <label className="flex cursor-pointer items-start gap-2 text-[12.5px] text-foreground/80">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={codesSaved}
-              onChange={(e) => setCodesSaved(e.target.checked)}
-              className="mt-0.5 size-3.5 accent-[var(--color-brand-600)]"
+              onCheckedChange={(checked) => setCodesSaved(Boolean(checked))}
+              className="mt-0.5 border-primary shadow-sm data-[checked]:border-primary data-[checked]:bg-primary"
             />
             <span>I&apos;ve saved my backup codes somewhere safe.</span>
           </label>
 
-          <button
+          <Button
             type="button"
             onClick={finish}
             disabled={!codesSaved}
-            className="inline-flex h-12 items-center justify-center gap-1.5 rounded-md bg-[var(--color-brand-600)] px-4 text-[14.5px] font-semibold text-white shadow-[0_4px_12px_rgba(16,185,129,0.25)] transition-all hover:bg-[var(--color-brand-700)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-12 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-emerald hover:bg-primary/90 disabled:opacity-50"
           >
             Continue to portal
             <ChevronRight className="size-4" />
-          </button>
+          </Button>
         </>
       )}
     </div>

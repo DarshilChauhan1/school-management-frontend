@@ -1,8 +1,22 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  Check,
+  Contact,
+  FilePlus2,
+  HeartPulse,
+  MapPin,
+  Plus,
+  ShieldCheck,
+  Trash2,
+  UserRound,
+  X,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { FormProvider, useFieldArray, useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -19,8 +33,10 @@ import { FormField } from "@/components/ui/form-field";
 import { SelectField } from "@/components/ui/select-field";
 import { Spinner } from "@/components/ui/spinner";
 import { TextareaField } from "@/components/ui/textarea-field";
+import { cn } from "@/lib/utils";
 import { useAcademicYears } from "@/modules/academic-year/api/use-academic-years";
 import { useClasses } from "@/modules/class/api/use-classes";
+import { useStudentStore } from "@/stores/dialog-store";
 
 import {
   BLOOD_GROUPS,
@@ -40,7 +56,6 @@ import {
   type GuardianFormSchema,
   type StudentFormSchema,
 } from "../schemas/student.schema";
-import { useStudentStore } from "@/stores/dialog-store";
 
 const emptyToUndefined = (value?: string) => {
   const trimmed = value?.trim();
@@ -162,11 +177,12 @@ export function StudentFormDialog() {
   const createMutation = useCreateStudent();
   const updateMutation = useUpdateStudent();
   const isSaving = createMutation.isPending || updateMutation.isPending;
+  const [step, setStep] = useState(0);
 
-    const methods = useForm<StudentFormSchema>({
-      resolver: zodResolver(studentSchema),
-      defaultValues: studentDefaults,
-    });
+  const methods = useForm<StudentFormSchema>({
+    resolver: zodResolver(studentSchema),
+    defaultValues: studentDefaults,
+  });
 
   const guardiansArray = useFieldArray({
     control: methods.control,
@@ -265,213 +281,318 @@ export function StudentFormDialog() {
     value: section.id,
   }));
 
+  const handleClose = () => {
+    setStep(0);
+    closeForm();
+  };
+
   const onSubmit = (values: StudentFormSchema) => {
     if (editing) {
       updateMutation.mutate(
         { id: editing.id, body: updatePayload(values) },
-        { onSuccess: closeForm },
+        { onSuccess: handleClose },
       );
       return;
     }
-    createMutation.mutate(createPayload(values), { onSuccess: closeForm });
+    createMutation.mutate(createPayload(values), { onSuccess: handleClose });
   };
 
+  const steps = [
+    { label: "Admission", icon: FilePlus2 },
+    { label: "Profile", icon: UserRound },
+    { label: "Contact", icon: MapPin },
+    { label: "Guardian", icon: ShieldCheck },
+  ];
+  const currentStep = steps[step];
+  const isLastStep = step === steps.length - 1;
+
   return (
-    <Dialog open={isFormOpen} onOpenChange={(open) => !open && closeForm()}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] max-w-4xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit student" : "New student"}</DialogTitle>
-          <DialogDescription>
-            Capture admission, enrollment, contact, and guardian details in one place.
-          </DialogDescription>
-        </DialogHeader>
+    <Dialog open={isFormOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="modal-pop max-h-[calc(100vh-2rem)] max-w-4xl gap-0 overflow-hidden rounded-[1.25rem] border-border bg-card p-0 shadow-elevate">
+        <div className="border-b border-border bg-card px-7 pb-5 pt-7">
+          <DialogHeader className="gap-1.5">
+            <span className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+              Admissions
+            </span>
+            <DialogTitle className="text-2xl font-semibold text-foreground">
+              {isEditing ? "Edit student" : "New student"}
+            </DialogTitle>
+            <DialogDescription>
+              Capture admission, enrollment, contact, and guardian details in one place.
+            </DialogDescription>
+          </DialogHeader>
+
+          <ol className="mt-5 flex flex-wrap items-center gap-2">
+            {steps.map((item, index) => {
+              const Icon = item.icon;
+              const isActive = step === index;
+              const isComplete = step > index;
+              return (
+                <li key={item.label}>
+                  <button
+                    type="button"
+                    onClick={() => setStep(index)}
+                    className={cn(
+                      "inline-flex h-9 items-center gap-2 rounded-full px-3 text-xs font-semibold transition-all",
+                      isActive && "bg-primary text-primary-foreground shadow-emerald",
+                      isComplete && !isActive && "bg-primary-soft text-primary",
+                      !isActive && !isComplete && "bg-paper-2 text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <span className="grid size-5 place-items-center rounded-full bg-current/10">
+                      {isComplete ? <Check className="size-3.5" /> : <Icon className="size-3.5" />}
+                    </span>
+                    {item.label}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
 
         <FormProvider {...methods}>
-          <form className="space-y-5" onSubmit={methods.handleSubmit(onSubmit)}>
-            <section className="space-y-3 rounded-lg border bg-muted/30 p-3">
-              <p className="text-sm font-semibold">Admission</p>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <FormField<StudentFormSchema> name="admissionNumber" label="Admission no." />
-                <FormField<StudentFormSchema> name="rollNumber" label="Roll no." />
-                <FormField<StudentFormSchema> name="admissionDate" label="Admission date" type="date" />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <SelectField<StudentFormSchema>
-                  name="academicYearId"
-                  label="Academic year"
-                  options={academicYearOptions}
-                  placeholder={academicYearsQuery.isLoading ? "Loading…" : "Select year"}
-                  disabled={academicYearsQuery.isLoading}
-                />
-                <SelectField<StudentFormSchema>
-                  name="classId"
-                  label="Class"
-                  options={classOptions}
-                  placeholder={classesQuery.isLoading ? "Loading…" : "Select class"}
-                  disabled={classesQuery.isLoading}
-                />
-                <SelectField<StudentFormSchema>
-                  name="sectionId"
-                  label="Section"
-                  options={sectionOptions}
-                  placeholder={selectedClass ? "Select section" : "Select class first"}
-                  disabled={!selectedClass}
-                />
-              </div>
-            </section>
-
-            <section className="space-y-3 rounded-lg border bg-muted/30 p-3">
-              <p className="text-sm font-semibold">Student profile</p>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <FormField<StudentFormSchema> name="firstName" label="First name" />
-                <FormField<StudentFormSchema> name="middleName" label="Middle name" />
-                <FormField<StudentFormSchema> name="lastName" label="Last name" />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-4">
-                <SelectField<StudentFormSchema>
-                  name="gender"
-                  label="Gender"
-                  options={[
-                    { label: "Male", value: "MALE" },
-                    { label: "Female", value: "FEMALE" },
-                    { label: "Other", value: "OTHER" },
-                  ]}
-                />
-                <FormField<StudentFormSchema> name="dateOfBirth" label="Date of birth" type="date" />
-                <SelectField<StudentFormSchema>
-                  name="bloodGroup"
-                  label="Blood group"
-                  options={BLOOD_GROUPS.map((value) => ({
-                    label: bloodGroupLabel(value),
-                    value,
-                  }))}
-                />
-                <SelectField<StudentFormSchema>
-                  name="status"
-                  label="Status"
-                  options={Object.entries(STUDENT_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
-                />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-4">
-                <FormField<StudentFormSchema> name="religion" label="Religion" />
-                <SelectField<StudentFormSchema>
-                  name="category"
-                  label="Category"
-                  placeholder="Select category"
-                  options={[
-                    { label: "Not specified", value: "" },
-                    ...SOCIAL_CATEGORIES.map((value) => ({ label: value, value })),
-                  ]}
-                />
-                <FormField<StudentFormSchema> name="motherTongue" label="Mother tongue" />
-                <FormField<StudentFormSchema> name="aadhaarNumber" label="Aadhaar no." />
-              </div>
-            </section>
-
-            <section className="space-y-3 rounded-lg border bg-muted/30 p-3">
-              <p className="text-sm font-semibold">Contact</p>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <FormField<StudentFormSchema> name="phone" label="Phone" />
-                <FormField<StudentFormSchema> name="email" label="Email" type="email" />
-                <FormField<StudentFormSchema> name="nationality" label="Nationality" />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-4">
-                <FormField<StudentFormSchema> name="addressLine1" label="Address line 1" />
-                <FormField<StudentFormSchema> name="addressLine2" label="Address line 2" />
-                <FormField<StudentFormSchema> name="city" label="City" />
-                <FormField<StudentFormSchema> name="district" label="District" />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-4">
-                <FormField<StudentFormSchema> name="state" label="State" />
-                <FormField<StudentFormSchema> name="pincode" label="Pincode" />
-                <FormField<StudentFormSchema> name="country" label="Country" />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <FormField<StudentFormSchema> name="emergencyContactName" label="Emergency name" />
-                <FormField<StudentFormSchema> name="emergencyContactPhone" label="Emergency phone" />
-                <FormField<StudentFormSchema> name="emergencyContactRelation" label="Relation" />
-              </div>
-              <TextareaField<StudentFormSchema> name="medicalConditions" label="Medical notes" rows={2} />
-            </section>
-
-            {!isEditing ? (
-              <section className="space-y-3 rounded-lg border bg-muted/30 p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold">Guardians</p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => guardiansArray.append({ ...guardianDefaults, isPrimaryContact: false })}
-                  >
-                    <Plus className="size-3.5" />
-                    Add guardian
-                  </Button>
+          <form className="contents" onSubmit={methods.handleSubmit(onSubmit)}>
+            <div className="max-h-[60vh] overflow-y-auto bg-background px-7 py-6">
+              <section className="section-rise space-y-5">
+                <div className="flex items-center gap-3">
+                  <span className="grid size-10 place-items-center rounded-xl bg-primary-soft text-primary">
+                    <currentStep.icon className="size-5" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{currentStep.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {step === 0 && "School year, class, section, and admission identifiers."}
+                      {step === 1 && "Student identity, profile, and academic status."}
+                      {step === 2 && "Address, communication, emergency, and health notes."}
+                      {step === 3 && "Guardian contact records and account state."}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  {guardiansArray.fields.map((field, index) => (
-                    <div key={field.id} className="animate-soft-pop rounded-md border bg-background p-3">
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Guardian {index + 1}
-                        </span>
-                        {guardiansArray.fields.length > 1 ? (
-                          <Button
-                            type="button"
-                            size="icon-sm"
-                            variant="ghost"
-                            aria-label="Remove guardian"
-                            onClick={() => guardiansArray.remove(index)}
-                          >
-                            <Trash2 className="size-4 text-destructive" />
-                          </Button>
-                        ) : null}
+
+                {step === 0 && (
+                  <div className="paper-card space-y-4 p-4">
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <FormField<StudentFormSchema> name="admissionNumber" label="Admission no." />
+                      <FormField<StudentFormSchema> name="rollNumber" label="Roll no." />
+                      <FormField<StudentFormSchema> name="admissionDate" label="Admission date" type="date" />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <SelectField<StudentFormSchema>
+                        name="academicYearId"
+                        label="Academic year"
+                        options={academicYearOptions}
+                        placeholder={academicYearsQuery.isLoading ? "Loading..." : "Select year"}
+                        disabled={academicYearsQuery.isLoading}
+                      />
+                      <SelectField<StudentFormSchema>
+                        name="classId"
+                        label="Class"
+                        options={classOptions}
+                        placeholder={classesQuery.isLoading ? "Loading..." : "Select class"}
+                        disabled={classesQuery.isLoading}
+                      />
+                      <SelectField<StudentFormSchema>
+                        name="sectionId"
+                        label="Section"
+                        options={sectionOptions}
+                        placeholder={selectedClass ? "Select section" : "Select class first"}
+                        disabled={!selectedClass}
+                      />
+                    </div>
+                    <FormField<StudentFormSchema> name="previousSchoolName" label="Previous school" />
+                  </div>
+                )}
+
+                {step === 1 && (
+                  <div className="paper-card space-y-4 p-4">
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <FormField<StudentFormSchema> name="firstName" label="First name" />
+                      <FormField<StudentFormSchema> name="middleName" label="Middle name" />
+                      <FormField<StudentFormSchema> name="lastName" label="Last name" />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-4">
+                      <SelectField<StudentFormSchema>
+                        name="gender"
+                        label="Gender"
+                        options={[
+                          { label: "Male", value: "MALE" },
+                          { label: "Female", value: "FEMALE" },
+                          { label: "Other", value: "OTHER" },
+                        ]}
+                      />
+                      <FormField<StudentFormSchema> name="dateOfBirth" label="Date of birth" type="date" />
+                      <SelectField<StudentFormSchema>
+                        name="bloodGroup"
+                        label="Blood group"
+                        options={BLOOD_GROUPS.map((value) => ({
+                          label: bloodGroupLabel(value),
+                          value,
+                        }))}
+                      />
+                      <SelectField<StudentFormSchema>
+                        name="status"
+                        label="Status"
+                        options={Object.entries(STUDENT_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+                      />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-4">
+                      <FormField<StudentFormSchema> name="religion" label="Religion" />
+                      <SelectField<StudentFormSchema>
+                        name="category"
+                        label="Category"
+                        placeholder="Select category"
+                        options={[
+                          { label: "Not specified", value: "" },
+                          ...SOCIAL_CATEGORIES.map((value) => ({ label: value, value })),
+                        ]}
+                      />
+                      <FormField<StudentFormSchema> name="motherTongue" label="Mother tongue" />
+                      <FormField<StudentFormSchema> name="aadhaarNumber" label="Aadhaar no." />
+                    </div>
+                  </div>
+                )}
+
+                {step === 2 && (
+                  <div className="paper-card space-y-4 p-4">
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <FormField<StudentFormSchema> name="phone" label="Phone" />
+                      <FormField<StudentFormSchema> name="email" label="Email" type="email" />
+                      <FormField<StudentFormSchema> name="nationality" label="Nationality" />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-4">
+                      <FormField<StudentFormSchema> name="addressLine1" label="Address line 1" />
+                      <FormField<StudentFormSchema> name="addressLine2" label="Address line 2" />
+                      <FormField<StudentFormSchema> name="city" label="City" />
+                      <FormField<StudentFormSchema> name="district" label="District" />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <FormField<StudentFormSchema> name="state" label="State" />
+                      <FormField<StudentFormSchema> name="pincode" label="Pincode" />
+                      <FormField<StudentFormSchema> name="country" label="Country" />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <FormField<StudentFormSchema> name="emergencyContactName" label="Emergency name" />
+                      <FormField<StudentFormSchema> name="emergencyContactPhone" label="Emergency phone" />
+                      <FormField<StudentFormSchema> name="emergencyContactRelation" label="Relation" />
+                    </div>
+                    <TextareaField<StudentFormSchema> name="medicalConditions" label="Medical notes" rows={2} />
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div className="space-y-4">
+                    {isEditing ? (
+                      <CheckboxField<StudentFormSchema>
+                        name="isActive"
+                        label="Active student"
+                        description="Inactive students stay in records but are hidden from current rosters."
+                        className="paper-card rounded-xl bg-card px-4 py-3"
+                      />
+                    ) : null}
+
+                    <div className="paper-card space-y-4 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <Contact className="size-4 text-primary" />
+                          <p className="text-sm font-semibold">Guardians</p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="rounded-full"
+                          onClick={() => guardiansArray.append({ ...guardianDefaults, isPrimaryContact: false })}
+                        >
+                          <Plus className="size-3.5" />
+                          Add guardian
+                        </Button>
                       </div>
-                      <div className="grid gap-3 sm:grid-cols-4">
-                        <SelectField<StudentFormSchema>
-                          name={`guardians.${index}.relation` as const}
-                          label="Relation"
-                          options={Object.entries(GUARDIAN_RELATION_LABELS).map(([value, label]) => ({ value, label }))}
-                        />
-                        <FormField<StudentFormSchema> name={`guardians.${index}.firstName` as const} label="First name" />
-                        <FormField<StudentFormSchema> name={`guardians.${index}.lastName` as const} label="Last name" />
-                        <FormField<StudentFormSchema> name={`guardians.${index}.phone` as const} label="Phone" />
-                      </div>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                        <FormField<StudentFormSchema> name={`guardians.${index}.email` as const} label="Email" type="email" />
-                        <FormField<StudentFormSchema> name={`guardians.${index}.occupation` as const} label="Occupation" />
-                        <FormField<StudentFormSchema> name={`guardians.${index}.alternatePhone` as const} label="Alternate phone" />
-                      </div>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-4">
-                        <FormField<StudentFormSchema> name={`guardians.${index}.addressLine1` as const} label="Address" />
-                        <FormField<StudentFormSchema> name={`guardians.${index}.city` as const} label="City" />
-                        <FormField<StudentFormSchema> name={`guardians.${index}.state` as const} label="State" />
-                        <FormField<StudentFormSchema> name={`guardians.${index}.pincode` as const} label="Pincode" />
-                      </div>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        <CheckboxField<StudentFormSchema> name={`guardians.${index}.isPrimaryContact` as const} label="Primary contact" />
-                        <CheckboxField<StudentFormSchema> name={`guardians.${index}.isEmergencyContact` as const} label="Emergency contact" />
+                      <div className="space-y-3">
+                        {guardiansArray.fields.map((field, index) => (
+                          <div key={field.id} className="section-rise rounded-xl border border-border bg-paper-2/60 p-4">
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                                <HeartPulse className="size-3.5 text-primary" />
+                                Guardian {index + 1}
+                              </span>
+                              {guardiansArray.fields.length > 1 ? (
+                                <Button
+                                  type="button"
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  aria-label="Remove guardian"
+                                  onClick={() => guardiansArray.remove(index)}
+                                >
+                                  <Trash2 className="size-4 text-destructive" />
+                                </Button>
+                              ) : null}
+                            </div>
+                            <div className="grid gap-4 sm:grid-cols-4">
+                              <SelectField<StudentFormSchema>
+                                name={`guardians.${index}.relation` as const}
+                                label="Relation"
+                                options={Object.entries(GUARDIAN_RELATION_LABELS).map(([value, label]) => ({ value, label }))}
+                              />
+                              <FormField<StudentFormSchema> name={`guardians.${index}.firstName` as const} label="First name" />
+                              <FormField<StudentFormSchema> name={`guardians.${index}.lastName` as const} label="Last name" />
+                              <FormField<StudentFormSchema> name={`guardians.${index}.phone` as const} label="Phone" />
+                            </div>
+                            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                              <FormField<StudentFormSchema> name={`guardians.${index}.email` as const} label="Email" type="email" />
+                              <FormField<StudentFormSchema> name={`guardians.${index}.occupation` as const} label="Occupation" />
+                              <FormField<StudentFormSchema> name={`guardians.${index}.alternatePhone` as const} label="Alternate phone" />
+                            </div>
+                            <div className="mt-4 grid gap-4 sm:grid-cols-4">
+                              <FormField<StudentFormSchema> name={`guardians.${index}.addressLine1` as const} label="Address" />
+                              <FormField<StudentFormSchema> name={`guardians.${index}.city` as const} label="City" />
+                              <FormField<StudentFormSchema> name={`guardians.${index}.state` as const} label="State" />
+                              <FormField<StudentFormSchema> name={`guardians.${index}.pincode` as const} label="Pincode" />
+                            </div>
+                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                              <CheckboxField<StudentFormSchema> name={`guardians.${index}.isPrimaryContact` as const} label="Primary contact" />
+                              <CheckboxField<StudentFormSchema> name={`guardians.${index}.isEmergencyContact` as const} label="Emergency contact" />
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </section>
-            ) : (
-              <CheckboxField<StudentFormSchema>
-                name="isActive"
-                label="Active student"
-                description="Inactive students stay in records but are hidden from current rosters."
-              />
-            )}
+            </div>
 
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={closeForm}>
+            <DialogFooter className="items-center justify-between border-t border-border bg-card px-7 py-4 sm:justify-between">
+              <Button type="button" variant="ghost" className="rounded-full" onClick={handleClose}>
+                <X className="size-4" />
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? <Spinner className="size-4" /> : null}
-                {isEditing ? "Save changes" : "Create student"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full"
+                  disabled={step === 0 || isSaving}
+                  onClick={() => setStep((current) => Math.max(0, current - 1))}
+                >
+                  <ArrowLeft className="size-4" />
+                  Back
+                </Button>
+                {!isLastStep ? (
+                  <Button
+                    type="button"
+                    className="rounded-full shadow-emerald"
+                    onClick={() => setStep((current) => Math.min(steps.length - 1, current + 1))}
+                  >
+                    Continue
+                    <ArrowRight className="size-4" />
+                  </Button>
+                ) : (
+                  <Button type="submit" disabled={isSaving} className="rounded-full shadow-emerald">
+                    {isSaving ? <Spinner className="size-4" /> : <CalendarDays className="size-4" />}
+                    {isEditing ? "Save changes" : "Admit student"}
+                  </Button>
+                )}
+              </div>
             </DialogFooter>
           </form>
         </FormProvider>
